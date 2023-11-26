@@ -33,12 +33,24 @@ async function run() {
     const articleCollection = client
       .db("allInformation")
       .collection("articleCollection");
+    const publisherCollection = client
+      .db("allInformation")
+      .collection("publisherCollection");
 
     //   article related api
 
     app.get("/articles", async (req, res) => {
-      const result = await articleCollection.find().toArray();
-      console.log(result);
+      const result = await articleCollection
+        .find({ isApproved: true })
+        .toArray();
+
+      res.send(result);
+    });
+
+    // publisher related api
+
+    app.get("/publishers", async (req, res) => {
+      const result = await publisherCollection.find().toArray();
       res.send(result);
     });
 
