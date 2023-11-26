@@ -1,10 +1,20 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const cookieParser = require("cookie-parser");
 const { MongoClient, ServerApiVersion } = require("mongodb");
 
 const app = express();
 const port = process.env.PORT || 5000;
+
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    credentials: true,
+  })
+);
+app.use(express.json());
+app.use(cookieParser());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@newsportal.ctkw5q7.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -19,16 +29,26 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
-    // Send a ping to confirm a successful connection
+    // await client.connect();
+    const articleCollection = client
+      .db("allInformation")
+      .collection("articleCollection");
+
+    //   article related api
+
+    app.get("/articles", async (req, res) => {
+      const result = await articleCollection.find().toArray();
+      console.log(result);
+      res.send(result);
+    });
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
   } finally {
     // Ensures that the client will close when you finish/error
-    await client.close();
+    // await client.close();
   }
 }
 run().catch(console.dir);
