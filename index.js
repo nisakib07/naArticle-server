@@ -36,6 +36,9 @@ async function run() {
     const publisherCollection = client
       .db("allInformation")
       .collection("publisherCollection");
+    const userCollection = client
+      .db("allInformation")
+      .collection("userCollection");
 
     //   article related api
 
@@ -47,10 +50,24 @@ async function run() {
       res.send(result);
     });
 
+    app.post("/articles", async (req, res) => {
+      const article = req.body;
+      const result = await articleCollection.insertOne(article);
+      res.send(result);
+    });
+
     // publisher related api
 
     app.get("/publishers", async (req, res) => {
       const result = await publisherCollection.find().toArray();
+      res.send(result);
+    });
+
+    // user Related APi
+
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const result = await userCollection.insertOne(user);
       res.send(result);
     });
 
