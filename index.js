@@ -110,6 +110,11 @@ async function run() {
       res.send(result);
     });
 
+    app.post("/publishers", async (req, res) => {
+      const publisher = req.body;
+      const result = await publisherCollection.insertOne(publisher);
+    });
+
     // user Related APi
 
     app.post("/users", async (req, res) => {
