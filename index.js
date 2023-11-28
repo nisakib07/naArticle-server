@@ -66,6 +66,13 @@ async function run() {
       res.send(result);
     });
 
+    app.delete("/articles/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const result = await articleCollection.deleteOne(filter);
+      res.send(result);
+    });
+
     // publisher related api
 
     app.get("/publishers", async (req, res) => {
