@@ -129,7 +129,12 @@ async function run() {
       const result = await articleCollection.find(filter).toArray();
       res.send(result);
     });
-
+    app.get("/articles/searchTitle/:title", async (req, res) => {
+      const title = req.params.title;
+      const filter = { title: { $regex: new RegExp(title, "i") } };
+      const result = await articleCollection.find(filter).toArray();
+      res.send(result);
+    });
     // publisher related api
 
     app.get("/publishers", async (req, res) => {
