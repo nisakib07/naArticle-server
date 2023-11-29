@@ -47,6 +47,13 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/articles/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await articleCollection.findOne(query);
+      res.send(result);
+    });
+
     app.post("/articles", async (req, res) => {
       const article = req.body;
       const result = await articleCollection.insertOne(article);
@@ -113,6 +120,7 @@ async function run() {
     app.post("/publishers", async (req, res) => {
       const publisher = req.body;
       const result = await publisherCollection.insertOne(publisher);
+      res.send(result);
     });
 
     // user Related APi
