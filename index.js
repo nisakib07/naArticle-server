@@ -135,6 +135,14 @@ async function run() {
       const result = await articleCollection.find(filter).toArray();
       res.send(result);
     });
+
+    app.get("/articles/searchTags/tags", async (req, res) => {
+      const tags = req.query.tags; // Assuming tags are passed as query parameters
+      const filter = { tags: { $elemMatch: { $in: tags } } };
+      const result = await articleCollection.find(filter).toArray();
+      res.send(result);
+    });
+
     // publisher related api
 
     app.get("/publishers", async (req, res) => {
