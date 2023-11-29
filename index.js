@@ -123,6 +123,13 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/articles/searchPublisher/:publisher", async (req, res) => {
+      const publisher = req.params.publisher;
+      const filter = { publisher: publisher };
+      const result = await articleCollection.find(filter).toArray();
+      res.send(result);
+    });
+
     // publisher related api
 
     app.get("/publishers", async (req, res) => {
