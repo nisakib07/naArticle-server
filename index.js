@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const cookieParser = require("cookie-parser");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
@@ -27,6 +28,20 @@ const client = new MongoClient(uri, {
   },
 });
 
+const verifyToken = (req, res, next) => {
+  const token = req?.cookies?.token;
+  if (!token) {
+    return res.status(401).send({ message: "Unauthorized Access" });
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res.send({ message: "Unauthorized Access" });
+    }
+    req.user = decoded;
+    next();
+  });
+};
+
 async function run() {
   try {
     // await client.connect();
@@ -40,6 +55,31 @@ async function run() {
       .db("allInformation")
       .collection("userCollection");
 
+    //auth related api
+
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1h",
+      });
+
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        })
+        .send({ success: true });
+    });
+
+    app.post("/logout", async (req, res) => {
+      const user = req.body;
+      console.log("logging out", user);
+      res
+        .clearCookie("token", { maxAge: 0, sameSite: "none", secure: true })
+        .send({ success: true });
+    });
+
     //   article related api
 
     app.get("/articles", async (req, res) => {
@@ -47,14 +87,14 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/articles/:id", async (req, res) => {
+    app.get("/articles/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await articleCollection.findOne(query);
       res.send(result);
     });
 
-    app.post("/articles", async (req, res) => {
+    app.post("/articles", verifyToken, async (req, res) => {
       const article = req.body;
       const result = await articleCollection.insertOne(article);
       res.send(result);
@@ -98,7 +138,7 @@ async function run() {
       res.send(result);
     });
 
-    app.delete("/articles/:id", async (req, res) => {
+    app.delete("/articles/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const result = await articleCollection.deleteOne(filter);
@@ -123,20 +163,24 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/articles/searchPublisher/:publisher", async (req, res) => {
-      const publisher = req.params.publisher;
-      const filter = { publisher: publisher };
-      const result = await articleCollection.find(filter).toArray();
-      res.send(result);
-    });
-    app.get("/articles/searchTitle/:title", async (req, res) => {
+    app.get(
+      "/articles/searchPublisher/:publisher",
+      verifyToken,
+      async (req, res) => {
+        const publisher = req.params.publisher;
+        const filter = { publisher: publisher };
+        const result = await articleCollection.find(filter).toArray();
+        res.send(result);
+      }
+    );
+    app.get("/articles/searchTitle/:title", verifyToken, async (req, res) => {
       const title = req.params.title;
       const filter = { title: { $regex: new RegExp(title, "i") } };
       const result = await articleCollection.find(filter).toArray();
       res.send(result);
     });
 
-    app.get("/articles/searchTags/tags", async (req, res) => {
+    app.get("/articles/searchTags/tags", verifyToken, async (req, res) => {
       const tags = req.query.tags; // Assuming tags are passed as query parameters
       const filter = { tags: { $elemMatch: { $in: tags } } };
       const result = await articleCollection.find(filter).toArray();
@@ -145,12 +189,12 @@ async function run() {
 
     // publisher related api
 
-    app.get("/publishers", async (req, res) => {
+    app.get("/publishers", verifyToken, async (req, res) => {
       const result = await publisherCollection.find().toArray();
       res.send(result);
     });
 
-    app.post("/publishers", async (req, res) => {
+    app.post("/publishers", verifyToken, async (req, res) => {
       const publisher = req.body;
       const result = await publisherCollection.insertOne(publisher);
       res.send(result);
@@ -169,12 +213,12 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/users", async (req, res) => {
+    app.get("/users", verifyToken, async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     });
 
-    app.get("/users/admin/:email", async (req, res) => {
+    app.get("/users/admin/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
 
       const query = { email: email };
@@ -196,7 +240,7 @@ async function run() {
       res.send(user);
     });
 
-    app.patch("/users/admin/:id", async (req, res) => {
+    app.patch("/users/admin/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
@@ -209,7 +253,7 @@ async function run() {
       res.send(result);
     });
 
-    app.put("/users/email", async (req, res) => {
+    app.put("/users/email", verifyToken, async (req, res) => {
       let query = {};
       if (req.query?.email) {
         query = { email: req.query?.email };
