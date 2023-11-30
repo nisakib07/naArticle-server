@@ -278,7 +278,7 @@ async function run() {
           ...body,
         },
       };
-      console.log(query);
+
       const options = { upsert: true };
       const result = await userCollection.updateOne(query, updatedDoc, options);
       res.send(result);
