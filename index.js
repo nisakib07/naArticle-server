@@ -54,6 +54,9 @@ async function run() {
     const userCollection = client
       .db("allInformation")
       .collection("userCollection");
+    const plansCollection = client
+      .db("allInformation")
+      .collection("plansCollection");
 
     //auth related api
 
@@ -84,6 +87,12 @@ async function run() {
 
     app.get("/articles", async (req, res) => {
       const result = await articleCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/approvedArticles", async (req, res) => {
+      const query = { status: "Approved" };
+      const result = await articleCollection.find(query).toArray();
       res.send(result);
     });
 
@@ -145,7 +154,7 @@ async function run() {
       res.send(result);
     });
 
-    app.put("/articles/:id", async (req, res) => {
+    app.put("/articles/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const body = req.body;
@@ -240,7 +249,7 @@ async function run() {
       res.send(user);
     });
 
-    app.patch("/users/admin/:id", verifyToken, async (req, res) => {
+    app.patch("/users/admin/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
@@ -249,6 +258,17 @@ async function run() {
         },
       };
 
+      const result = await userCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+    app.patch("/users/:email", async (req, res) => {
+      const email = req.query.email;
+      const filter = { email: email };
+      const updatedDoc = {
+        $set: {
+          isSubscribed: false,
+        },
+      };
       const result = await userCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
@@ -285,6 +305,12 @@ async function run() {
       res.send({
         clientSecret: paymentIntent.client_secret,
       });
+    });
+
+    //plans section
+    app.get("/plans", async (req, res) => {
+      const result = await plansCollection.find().toArray();
+      res.send(result);
     });
 
     await client.db("admin").command({ ping: 1 });
