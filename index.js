@@ -10,7 +10,7 @@ const port = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5173", "https://tame-bat.surge.sh"],
     credentials: true,
   })
 );
@@ -87,12 +87,6 @@ async function run() {
 
     app.get("/articles", async (req, res) => {
       const result = await articleCollection.find().toArray();
-      res.send(result);
-    });
-
-    app.get("/approvedArticles", async (req, res) => {
-      const query = { status: "Approved" };
-      const result = await articleCollection.find(query).toArray();
       res.send(result);
     });
 
@@ -198,7 +192,7 @@ async function run() {
 
     // publisher related api
 
-    app.get("/publishers", verifyToken, async (req, res) => {
+    app.get("/publishers", async (req, res) => {
       const result = await publisherCollection.find().toArray();
       res.send(result);
     });
@@ -222,7 +216,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/users", verifyToken, async (req, res) => {
+    app.get("/users", async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     });
@@ -273,7 +267,7 @@ async function run() {
       res.send(result);
     });
 
-    app.put("/users/email", verifyToken, async (req, res) => {
+    app.put("/users/email", async (req, res) => {
       let query = {};
       if (req.query?.email) {
         query = { email: req.query?.email };
@@ -313,7 +307,7 @@ async function run() {
       res.send(result);
     });
 
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
